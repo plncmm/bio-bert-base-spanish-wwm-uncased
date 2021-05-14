@@ -1,0 +1,7 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.8.1+cu102
+git+https://github.com/huggingface/transformers
+datasets >= 1.1.3
+sentencepiece != 0.1.92
+protobuf
+nltk
