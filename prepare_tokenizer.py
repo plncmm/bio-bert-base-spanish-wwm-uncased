@@ -4,6 +4,7 @@ nltk.download('punkt')
 import re
 import shutil
 import argparse
+import multiprocessing as mp
 
 def normalizer(text, remove_tildes = False): #normalizes a given string to lowercase and changes all vowels to their base form
     text = text.lower() #string lowering
@@ -16,7 +17,7 @@ def normalizer(text, remove_tildes = False): #normalizes a given string to lower
         text = re.sub('ú', 'u', text)
     return text
 
-tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased")
+tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased", cache_dir = "/mnt/flock/fplana/cache")
 
 parser = argparse.ArgumentParser()
 
@@ -27,10 +28,14 @@ args = parser.parse_args()
 with open(args.corpus, encoding="utf-8") as f:
   corpus = normalizer(f.read())
   
+pool = mp.Pool(processes=4)
+
+tokens = pool.map()
+
 tokens = nltk.word_tokenize(corpus)
 
 tokenizer.add_tokens(tokens)
 
 tokenizer.save_pretrained("models/bio-bert-spanish-tokenizer")
 
-shutil.copyfile("models/bio-bert-spanish-tokenizer/tokenizer_config.json", "models/bio-bert-spanish-tokenizer")
+shutil.copyfile("models/bio-bert-spanish-tokenizer/tokenizer_config.json", "models/bio-bert-spanish-tokenizer/config.json")
