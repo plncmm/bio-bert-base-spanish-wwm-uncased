@@ -1,10 +1,12 @@
 import transformers
 import nltk
-nltk.download('punkt')
 import re
 import shutil
 import argparse
 import multiprocessing as mp
+import collections
+import itertools
+import json
 
 def normalizer(text, remove_tildes = False): #normalizes a given string to lowercase and changes all vowels to their base form
     text = text.lower() #string lowering
@@ -17,25 +19,48 @@ def normalizer(text, remove_tildes = False): #normalizes a given string to lower
         text = re.sub('ú', 'u', text)
     return text
 
-tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased", cache_dir = "/mnt/flock/fplana/cache")
+def tokenize(text):
+  return nltk.word_tokenize(normalizer(text))
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument("--corpus")
-
-args = parser.parse_args()
-
-with open(args.corpus, encoding="utf-8") as f:
-  corpus = normalizer(f.read())
+if __name__ == "__main__":
   
-pool = mp.Pool(processes=4)
+  nltk.download('punkt')
 
-tokens = pool.map()
+  tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased", cache_dir = "/mnt/flock/fplana/cache")
 
-tokens = nltk.word_tokenize(corpus)
+  parser = argparse.ArgumentParser()
 
-tokenizer.add_tokens(tokens)
+  parser.add_argument("--corpus")
+  
+  parser.add_argument("-p", type=int)
 
-tokenizer.save_pretrained("models/bio-bert-spanish-tokenizer")
+  args = parser.parse_args()
+  
+  lines = []
+  with open(args.corpus, encoding="utf-8") as f:
+    for line in f:
+      lines.append(line.rstrip())
+    
+  p = args.p if args.p else mp.cpu_count()
+  
+  pool = mp.Pool(processes=p)
 
-shutil.copyfile("models/bio-bert-spanish-tokenizer/tokenizer_config.json", "models/bio-bert-spanish-tokenizer/config.json")
+  tokens = pool.map(tokenize, lines)
+  
+  tokens = itertools.chain(*tokens)
+
+  freqs = collections.Counter(tokens)
+
+  vocab = [token for token,freq in freqs.items() if freq > 5]
+  
+  with open("vocab.json", "w", encoding="utf-8") as j:
+    j.write(json.dumps(vocab, ensure_ascii=False))
+  
+  with open("freqs.json", "w", encoding="utf-8") as j:
+    j.write(json.dumps(dict(freqs.most_common()), ensure_ascii=False))
+
+  tokenizer.add_tokens(vocab)
+
+  tokenizer.save_pretrained("models/bio-bert-spanish-tokenizer")
+
+  shutil.copyfile("models/bio-bert-spanish-tokenizer/tokenizer_config.json", "models/bio-bert-spanish-tokenizer/config.json")
