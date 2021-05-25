@@ -25,8 +25,11 @@ def tokenize(text):
 if __name__ == "__main__":
   
   nltk.download('punkt')
+  nltk.download('stopwords')
 
-  tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased", cache_dir = "/mnt/flock/fplana/cache")
+  stopwords = nltk.corpus.stopwords.words('spanish')
+
+  tokenizer = transformers.BertTokenizer.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased", cache_dir = "/mnt/flock/fvillena/cache")
 
   parser = argparse.ArgumentParser()
 
@@ -51,7 +54,7 @@ if __name__ == "__main__":
 
   freqs = collections.Counter(tokens)
 
-  vocab = [token for token,freq in freqs.items() if freq > 5]
+  vocab = [token for token,freq in freqs.items() if ((freq > 100) & (not token in tokenizer.vocab) & (not token in stopwords))]
   
   with open("vocab.json", "w", encoding="utf-8") as j:
     j.write(json.dumps(vocab, ensure_ascii=False))

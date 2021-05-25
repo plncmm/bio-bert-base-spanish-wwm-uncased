@@ -11,4 +11,4 @@
 
 ml Python/3.7.3
 
-/home/fplana/fvillena/bio-bert-base-spanish-wwm-uncased/venv/bin/python prepare_tokenizer.py --corpus data/raw/corpus_not_normalized.txt -p 20
+/home/fvillena/bio-bert-base-spanish-wwm-uncased/venv/bin/python prepare_tokenizer.py --corpus data/raw/corpus_not_normalized.txt -p 20
